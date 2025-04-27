@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,7 +20,7 @@ class _MapScreenState extends State<MapScreen> {
   late BitmapDescriptor _warehouseIcon;
   late BitmapDescriptor _materialIcon;
   double _currentZoomLevel = 14.0;
-  bool _isDarkMode = false; // <--- Dark mode toggle
+  bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -28,7 +30,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _initializeMap() async {
     await _loadCustomIcons(initialSize: 60);
-    _loadInitialMarkers();
+    await _fetchMarkers();
   }
 
   Future<BitmapDescriptor> _resizeImage(String path, int width) async {
@@ -50,39 +52,113 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {});
   }
 
-  void _loadInitialMarkers() {
-    Set<Marker> loadedMarkers = {};
+  // Fetch markers dynamically for the authenticated user
+  Future<void> _fetchMarkers() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      print("No user is signed in.");
+      return;
+    }
 
-    loadedMarkers.add(
-      Marker(
-        markerId: MarkerId('truck_1'),
-        position: LatLng(12.9716, 77.5946),
-        infoWindow: InfoWindow(title: 'Truck 1'),
-        icon: _truckIcon,
-      ),
-    );
+    print('Fetching markers for user: $userId');
 
-    loadedMarkers.add(
-      Marker(
-        markerId: MarkerId('warehouse_1'),
-        position: LatLng(12.9760, 77.5900),
-        infoWindow: InfoWindow(title: 'Warehouse'),
-        icon: _warehouseIcon,
-      ),
-    );
+    try {
+      final trucksSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('trucks')
+          .get();
 
-    loadedMarkers.add(
-      Marker(
-        markerId: MarkerId('material_1'),
-        position: LatLng(12.9680, 77.6000),
-        infoWindow: InfoWindow(title: 'Material Location'),
-        icon: _materialIcon,
-      ),
-    );
+      final warehousesSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('warehouses')
+          .get();
 
-    setState(() {
-      _markers = loadedMarkers;
-    });
+      final materialsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('materials')
+          .get();
+
+      print('Fetched ${trucksSnapshot.docs.length} trucks.');
+      print('Fetched ${warehousesSnapshot.docs.length} warehouses.');
+      print('Fetched ${materialsSnapshot.docs.length} materials.');
+
+      Set<Marker> loadedMarkers = {};
+
+      // Trucks
+      for (var doc in trucksSnapshot.docs) {
+        var location = _parseLocation(doc['location']);
+        if (location != null) {
+          loadedMarkers.add(
+            Marker(
+              markerId: MarkerId('truck_${userId}_${doc.id}'),
+              position: location,
+              infoWindow: InfoWindow(title: doc['driverName'] ?? 'Truck'),
+              icon: _truckIcon,
+            ),
+          );
+        }
+      }
+
+      // Warehouses
+      for (var doc in warehousesSnapshot.docs) {
+        var location = _parseLocation(doc['location']);
+        if (location != null) {
+          loadedMarkers.add(
+            Marker(
+              markerId: MarkerId('warehouse_${userId}_${doc.id}'),
+              position: location,
+              infoWindow: InfoWindow(title: doc['name'] ?? 'Warehouse'),
+              icon: _warehouseIcon,
+            ),
+          );
+        }
+      }
+
+      // Materials
+      for (var doc in materialsSnapshot.docs) {
+        var location = _parseLocation(doc['gpsLocation']);
+        if (location != null) {
+          loadedMarkers.add(
+            Marker(
+              markerId: MarkerId('material_${userId}_${doc.id}'),
+              position: location,
+              infoWindow: InfoWindow(title: doc['name'] ?? 'Material'),
+              icon: _materialIcon,
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _markers = loadedMarkers;
+      });
+
+    } catch (e) {
+      print('Error fetching markers: $e');
+    }
+  }
+
+  LatLng? _parseLocation(dynamic locationData) {
+    if (locationData == null) return null;
+
+    if (locationData is GeoPoint) {
+      return LatLng(locationData.latitude, locationData.longitude);
+    } else if (locationData is String) {
+      try {
+        String clean = locationData.replaceAll('[', '').replaceAll(']', '');
+        List<String> parts = clean.split(',');
+        double lat = double.parse(parts[0].replaceAll(RegExp(r'[^0-9\.-]'), '').trim());
+        double lng = double.parse(parts[1].replaceAll(RegExp(r'[^0-9\.-]'), '').trim());
+        return LatLng(lat, lng);
+      } catch (e) {
+        print('Error parsing location string: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   void _startSimulatedMovement() {
