@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1090721689537",
+    "firebase_url": "https://mindmentor-bc846-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "mindmentor-bc846",
+    "storage_bucket": "mindmentor-bc846.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090721689537:android:4ce04b71abad7b17474940",
+        "android_client_info": {
+          "package_name": "com.example.optima"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090721689537-34rur4p72bv0dr1tf48mica0bg3s10lv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyL1B_X7UFMHFZUvsGOBRuff3r-YryqUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090721689537-34rur4p72bv0dr1tf48mica0bg3s10lv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

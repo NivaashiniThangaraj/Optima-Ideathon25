@@ -1,0 +1,11 @@
+[
+    {
+      "featureType": "all",
+      "elementType": "all",
+      "stylers": [
+        { "saturation": 0 },
+        { "gamma": 0.5 }
+      ]
+    }
+  ]
+  

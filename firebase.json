@@ -1,0 +1,37 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "mindmentor-bc846",
+          "appId": "1:1090721689537:android:4ce04b71abad7b17474940",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "mindmentor-bc846",
+          "configurations": {
+            "android": "1:1090721689537:android:4ce04b71abad7b17474940",
+            "ios": "1:1090721689537:ios:c722b6b8707c2457474940",
+            "web": "1:1090721689537:web:b17323740f1d7e87474940",
+            "windows": "1:1090721689537:web:1f5c4b2d4634edab474940"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}
